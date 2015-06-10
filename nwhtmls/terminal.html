@@ -1,0 +1,45 @@
+     <!DOCTYPE html>
+<html>
+    <head>
+        <title data-bind="text: title">OctoPrint</title>  
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script> 
+$(function(){
+  $("#header").load("header.html"); 
+  $("#footer").load("footer.html"); 
+});
+</script> 	
+<div id="header"></div>	
+    </head>
+    <body> 
+                            <div id="term"
+                                 class="tab-pane"
+                                 
+                                 
+                                    >
+                                        <div class="terminal">
+    <pre id="terminal-output" class="pre-scrollable" data-bind="foreach: displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
+    <small class="pull-left"><button class="btn btn-mini" data-bind="click: toggleAutoscroll, css: {active: autoscrollEnabled}">Autoscroll</button> <span data-bind="text: lineCount"></span></small>
+    <small class="pull-right"><a href="#" data-bind="click: scrollToEnd">Scroll to end</a>&nbsp;|&nbsp;<a href="#" data-bind="click: selectAll">Select all</a></small>
+</div>
+
+<div class="row-fluid">
+    <div class="span6" id="termin-filterpanel">
+        <div data-bind="foreach: filters">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="attr: { value: regex }, checked: $parent.activeFilters"> <span data-bind="text: name"></span>
+            </label>
+        </div>
+    </div>
+    <div class="span6" id="terminal-sendpanel" style="display: none;" data-bind="visible: loginState.isUser">
+        <div class="input-append">
+            <input type="text" id="terminal-command" data-bind="value: command, event: { keyup: function(d,e) { return handleKeyUp(e); }, keydown: function(d,e) { return handleKeyDown(e); } }, enable: isOperational() && loginState.isUser()">
+            <button class="btn" type="button" id="terminal-send" data-bind="click: sendCommand, enable: isOperational() && loginState.isUser()">Send</button>
+        </div>
+        <small class="muted">Hint: Use the arrow up/down keys to recall commands sent previously</small>
+    </div>
+</div>
+                            </div>
+																					</body>
+							<div id="footer"></div>	
+		</head>

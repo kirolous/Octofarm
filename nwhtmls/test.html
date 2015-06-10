@@ -1,0 +1,2478 @@
+ <!DOCTYPE html>
+<html>
+    <head>
+        <title data-bind="text: title">OctoPrint</title>
+
+        <link rel="shortcut icon" href="/static/img/tentacle-32x32.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/img/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/img/apple-touch-icon-144x144.png">
+
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-modal.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-slider.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-tabdrop.css" rel="stylesheet" media="screen">
+<link href="/static/css/font-awesome.min.css" rel="stylesheet" media="screen">
+<link href="/static/css/jquery.fileupload-ui.css" rel="stylesheet" media="screen">
+<link href="/static/css/pnotify.min.css" rel="stylesheet" media="screen">
+
+
+
+    
+        <link href="/static/css/octoprint.css" rel="stylesheet" type="text/css" media="screen">
+    
+
+    
+        <link href="/static/plugins/cura/static/css/cura.css" rel="stylesheet" type="text/css" media="screen">
+    
+
+
+ <script lang="javascript">
+ 
+    var BASEURL = "//kirolous.ddns.net/";
+    var API_BASEURL = BASEURL + "api/";
+    var PLUGIN_BASEURL = BASEURL + "plugin/";
+    var GCODE_WORKER ="static/gcodeviewer/js/Worker.js";
+
+    var CONFIG_DEBUG =  false;
+
+    var CONFIG_GCODEFILESPERPAGE = 5000;
+    var CONFIG_TIMELAPSEFILESPERPAGE = 10;
+    var CONFIG_LOGFILESPERPAGE = 10;
+    var CONFIG_USERSPERPAGE = 10;
+    var CONFIG_WEBCAM_STREAM = BASEURL + "webcam/?action=stream";
+    var CONFIG_ACCESS_CONTROL = true; 
+    var CONFIG_SD_SUPPORT = true; 
+    var CONFIG_FIRST_RUN =  false;
+    var CONFIG_TEMPERATURE_GRAPH = true; 
+    var CONFIG_GCODE_SIZE_THRESHOLD = 20971520;
+    var CONFIG_GCODE_MOBILE_SIZE_THRESHOLD = 2097152;
+
+    var SOCKJS_URI = BASEURL + "sockjs";
+    var SOCKJS_DEBUG = CONFIG_DEBUG;
+	
+	var UI_API_KEY = "767DABB893EB46D8845F34A10E4DB0F7";
+	
+   var X_API_KEY = "767DABB893EB46D8845F34A10E4DB0F7";
+   
+    var VERSION = "1.2.0-dev-619-gdee205f";
+    var DISPLAY_VERSION = "1.2.0-dev-619-gdee205f (devel branch)";
+    var LOCALE = "en";
+	var AVAILABLE_LOCALES ="en";
+
+    var OCTOPRINT_VIEWMODELS = [];
+    var ADDITIONAL_VIEWMODELS = [];
+	var OCTOPRINT_ADDITIONAL_BINDINGS = [];
+</script>
+    </head>
+    <body>
+        <div id="navbar" class="navbar navbar-static-top">
+            <div class="navbar-inner" data-bind="css: appearanceClasses">
+                <div class="container">
+                    <a class="brand" href="#"> <span data-bind="text: appearance.brand">OctoPrint</span></a>
+                    <div class="nav-collapse">
+                        <!-- Navbar -->
+                        <ul class="nav pull-right">
+                            
+                                
+                                <!-- ko allowBindings: false -->
+                                <li id="navbar_settings"
+                                    data-bind="visible: loginState.isAdmin"
+                                    
+                                    style="display: none"
+                                        >
+                                    <a id="navbar_show_settings" class="pull-right" href="#settings_dialog" data-bind="click: show">
+    <i class="icon-wrench"></i> Settings
+</a>
+                                </li>
+                                <!-- /ko -->
+                            
+                                
+                                
+                                <li id="navbar_systemmenu"
+                                    data-bind="visible: loginState.isAdmin"
+                                    class="dropdown"
+                                    style="display: none"
+                                        >
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="icon-off"></i> System
+    <b class="caret"></b>
+</a>
+<ul class="dropdown-menu" data-bind="foreach: systemActions">
+    <li><a href="#" data-bind="click: $root.triggerAction, text: name"></a></li>
+</ul>
+                                </li>
+                                
+                            
+                                
+                                
+                                <li id="navbar_login"
+                                    
+                                    class="dropdown"
+                                    
+                                        >
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="icon-user"></i> <span data-bind="text: loginState.userMenuText">Login</span>
+    <b class="caret"></b>
+</a>
+<div id="login_dropdown_loggedout" style="padding: 15px" class="dropdown-menu" data-bind="css: {hide: loginState.loggedIn(), 'dropdown-menu': !loginState.loggedIn()}">
+    <label for="login_user">Username</label>
+    <input type="text" id="login_user" data-bind="value: loginState.loginUser, event: {'keyup': loginState.onLoginUserKeyup}" placeholder="Username" autocapitalize="none">
+    <label for="login_pass">Password</label>
+    <input type="password" id="login_pass" data-bind="value: loginState.loginPass, event: {'keyup': loginState.onLoginPassKeyup}" placeholder="Password">
+    <label class="checkbox">
+        <input type="checkbox" id="login_remember" data-bind="checked: loginState.loginRemember"> Remember me
+    </label>
+    <button class="btn btn-block btn-primary" id="login_button" data-bind="click: loginState.login">Login</button>
+</div>
+<ul id="login_dropdown_loggedin" class="hide" data-bind="css: {hide: !loginState.loggedIn(), 'dropdown-menu': loginState.loggedIn()}">
+    <li><a href="#" id="change_password_button" data-bind="click: function() { users.showChangePasswordDialog(loginState.currentUser()); }">Change Password</a></li>
+    <li><a href="#" id="logout_button" data-bind="click: loginState.logout">Logout</a></li>
+</ul>
+                                </li>
+                                
+                            
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container octoprint-container">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="accordion span4">
+                    
+                        
+                        <!-- ko allowBindings: false -->
+                        <div id="connection_wrapper"
+                             class="accordion-group "
+                             data-bind="visible: loginState.isAdmin"
+                              style="display: none" 
+                                >
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle" data-toggle="collapse" data-target="#connection">
+                                    <i class="icon-signal"></i> Connection
+                                </a>
+                                
+                            </div>
+                            <div id="connection"
+                                 class="accordion-body collapse in "
+                                 
+                                    >
+                                <div class="accordion-inner">
+                                    <label for="connection_ports" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">Serial Port</label>
+<select id="connection_ports" data-bind="options: portOptions, optionsCaption: 'AUTO', value: selectedPort, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
+<label for="connection_baudrates" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">Baudrate</label>
+<select id="connection_baudrates" data-bind="options: baudrateOptions, optionsCaption: 'AUTO', value: selectedBaudrate, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
+<label for="connection_printers" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">Printer Profile</label>
+<select id="connection_printers" data-bind="options: printerOptions, optionsText: 'name', optionsValue: 'id', value: selectedPrinter, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
+<label class="checkbox">
+    <input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"> Save connection settings
+</label>
+<label class="checkbox">
+    <input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"> Auto-connect on server startup
+</label>
+<button class="btn btn-block" id="printer_connect" data-bind="click: connect, text: buttonText(), enable: loginState.isUser()">Connect</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    
+                        
+                        <!-- ko allowBindings: false -->
+                        <div id="state_wrapper"
+                             class="accordion-group "
+                             
+                             
+                                >
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle" data-toggle="collapse" data-target="#state">
+                                    <i class="icon-info-sign"></i> State
+                                </a>
+                                
+                            </div>
+                            <div id="state"
+                                 class="accordion-body collapse in "
+                                 
+                                    >
+                                <div class="accordion-inner">
+                                    Machine State: <strong data-bind="text: stateString"></strong><br>
+File: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
+Timelapse: <strong data-bind="text: timelapseString"></strong><br>
+<!-- ko foreach: filament -->
+<span data-bind="text: 'Filament (' + name() + '): '"></span><strong data-bind="text: formatFilament(data())"></strong><br>
+<!-- /ko -->
+Approx. Total Print Time: <strong data-bind="text: estimatedPrintTimeString"></strong><br>
+Print Time: <strong data-bind="text: printTimeString"></strong><br>
+Print Time Left: <strong data-bind="text: printTimeLeftString"></strong><br>
+Printed: <strong data-bind="text: byteString"></strong><br>
+
+<div class="progress">
+    <div class="bar" id="job_progressBar" data-bind="style: { width: progressString() + '%' }"></div>
+</div>
+
+<div class="row-fluid print-control" style="display: none;" data-bind="visible: loginState.isUser">
+    <button class="btn btn-primary span4" data-bind="click: print, enable: isOperational() && isReady() && !isPrinting() && loginState.isUser(), css: {'btn-danger': isPaused()}, attr: {title: titlePrintButton}" id="job_print"><i class="icon-white" data-bind="css: {'icon-print': !isPaused(), 'icon-undo': isPaused()}"></i> <span data-bind="text: (isPaused() ? 'Restart' : 'Print')">Print</span></button>
+    <button class="btn span4" id="job_pause" data-bind="click: pause, enable: isOperational() && (isPrinting() || isPaused()) && loginState.isUser(), css: {active: isPaused()}, attr: {title: titlePauseButton}"><i data-bind="css: {'icon-pause': !isPaused(), 'icon-play': isPaused()}"></i> <span data-bind="visible: !isPaused()">Pause</span><span data-bind="visible: isPaused()">Resume</span></button>
+    <button class="btn span4" id="job_cancel" data-bind="click: cancel, enable: isOperational() && (isPrinting() || isPaused()) && loginState.isUser()" title="Cancels the print job"><i class="icon-stop"></i> Cancel</button>
+</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    
+                        
+                        <!-- ko allowBindings: false -->
+                        <div id="files_wrapper"
+                             class="accordion-group "
+                             
+                             
+                                >
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle" data-toggle="collapse" data-target="#files">
+                                    <i class="icon-list"></i> Files
+                                </a>
+                                
+                                    <div class="settings-trigger accordion-heading-button btn-group">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <span class="icon-wrench"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> Sort by name (ascending)</a></li>
+        <li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> Sort by upload date (descending)</a></li>
+        <li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> Sort by file size (descending)</a></li>
+        <li class="divider"></li>
+        <li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> Only show GCode files</a></li>
+        <li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> Only show STL files</a></li>
+        
+            <li class="divider"></li>
+            <li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('local'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'local') ? 'visible' : 'hidden'}"></i> Only show files stored locally</a></li>
+            <li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('sd'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'sd') ? 'visible' : 'hidden'}"></i> Only show files stored on SD</a></li>
+        
+        <li class="divider"></li>
+        <li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('printed'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'printed') ? 'visible' : 'hidden'}"></i> Hide successfully printed files</a></li>
+    </ul>
+</div>
+
+
+    <div class="sd-trigger accordion-heading-button btn-group">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+            <span class="icon-sd-black-14"></span>
+        </a>
+        <ul class="dropdown-menu">
+            <li data-bind="visible: !isSdReady()"><a href="#" data-bind="click: function() { $root.initSdCard(); }"><i class="icon-flag"></i> Initialize SD card</a></li>
+            <li data-bind="visible: isSdReady()"><a href="#" data-bind="click: function() { $root.refreshSdFiles(); }"><i class="icon-refresh"></i> Refresh SD files</a></li>
+            <li data-bind="visible: isSdReady()"><a href="#" data-bind="click: function() { $root.releaseSdCard(); }"><i class="icon-eject"></i> Release SD card</a></li>
+        </ul>
+    </div>
+
+                                
+                            </div>
+                            <div id="files"
+                                 class="accordion-body collapse in overflow_visible"
+                                 
+                                    >
+                                <div class="accordion-inner">
+                                    <form class="form-search">
+    <input type="text" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="Search...">
+</form>
+<div class="gcode_files" data-bind="slimScrolledForeach: listHelper.paginatedItems">
+    <div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
+
+    <script type="text/html" id="files_template_machinecode">
+        <div class="title" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name"></div>
+        <div class="uploaded">Uploaded: <span data-bind="text: formatTimeAgo(date)"></span></div>
+        <div class="size">Size: <span data-bind="text: formatSize(size)"></span></div>
+        <div class="additionalInfo hide" data-bind="html: $root.getAdditionalData($data)"></div>
+        <div class="btn-group action-buttons">
+            <div class="btn btn-mini toggleAdditionalData" data-bind="click: function() { if ($root.enableAdditionalData($data)) { $root.toggleAdditionalData($data); } else { return; } }, css: { disabled: !$root.enableAdditionalData($data) }"><i class="icon-chevron-down"></i></div>
+            <a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="Download"></i></a>
+            <div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="Remove"></i></div>
+            <div class="btn btn-mini" data-bind="click: function() { if ($root.enableSelect($data)) { $root.loadFile($data, false); } else { return; } }, css: {disabled: !$root.enableSelect($data)}"><i class="icon-folder-open" title="Load"></i></div>
+            <div class="btn btn-mini"  data-bind="click: function() { if ($root.enableSelect($data)) { $root.loadFile($data, true); } else { return; } }, css: {disabled: !$root.enableSelect($data)}"><i class="icon-print" title="Load and Print"></i></div>
+        </div>
+    </script>
+
+    <script type="text/html" id="files_template_model">
+        <div class="title muted" data-bind="text: name"></div>
+        <div class="uploaded">Uploaded: <span data-bind="text: formatTimeAgo(date)"></span></div>
+        <div class="size">Size: <span data-bind="text: formatSize(size)"></span></div>
+        <div class="btn-group action-buttons">
+            <a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="Download"></i></a>
+            <div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="Remove"></i></div>
+            <div class="btn btn-mini"  data-bind="click: function() { if ($root.enableSlicing($data)) { $root.sliceFile($data); } else { return; } }, css: {disabled: !$root.enableSlicing($data)}"><i class="icon-magic" title="Slice"></i></div>
+        </div>
+    </script>
+
+    <script type="text/html" id="files_template_folder">
+        <div class="title" data-bind="text: name"></div>
+    </script>
+</div>
+<div class="muted text-right">
+    <small>Free: <span data-bind="text: freeSpaceString"></span></small>
+</div>
+<div style="display: none;" data-bind="visible: loginState.isUser">
+    <div class="row-fluid upload-buttons">
+        
+            <span class="btn btn-primary fileinput-button span6" data-bind="css: {disabled: !$root.loginState.isUser()}" style="margin-bottom: 10px">
+                                <i class="icon-upload-alt icon-white"></i>
+                                <span>Upload</span>
+                                <input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
+                            </span>
+            <span class="btn btn-primary fileinput-button span6" data-bind="css: {disabled: !$root.loginState.isUser() || !$root.isSdReady()}" style="margin-bottom: 10px">
+                                <i class="icon-upload-alt icon-white"></i>
+                                <span>Upload to SD</span>
+                                <input id="gcode_upload_sd" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser() && isSdReady()">
+                            </span>
+        
+    </div>
+    <div id="gcode_upload_progress" class="progress" style="width: 100%;">
+        <div class="bar" style="width: 0%"></div>
+    </div>
+    <div>
+        <small class="muted">Hint: You can also drag and drop files on this page to upload them.</small>
+    </div>
+</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    
+                </div>
+
+                <!-- Tabs -->
+                <div class="span8 tabbable">
+                    <ul class="nav nav-tabs" id="tabs">
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <li id="temp_link"
+                                class="active "
+                                
+                                
+                                    >
+                                    <a href="#temp" data-toggle="tab">Temperature</a>
+                            </li>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <li id="control_link"
+                                class=" "
+                                
+                                
+                                    >
+                                    <a href="#control" data-toggle="tab">Control</a>
+                            </li>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <li id="gcode_link"
+                                class=" "
+                                
+                                
+                                    >
+                                    <a href="#gcode" data-toggle="tab">GCode Viewer</a>
+                            </li>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <li id="term_link"
+                                class=" "
+                                
+                                
+                                    >
+                                    <a href="#term" data-toggle="tab">Terminal</a>
+                            </li>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <li id="timelapse_link"
+                                class=" "
+                                
+                                
+                                    >
+                                    <a href="#timelapse" data-toggle="tab">Timelapse</a>
+                            </li>
+                            <!-- /ko -->
+                        
+                    </ul>
+
+                    <div class="tab-content">
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <div id="temp"
+                                 class="tab-pane active"
+                                 
+                                 
+                                    >
+                                        
+    <div class="row" style="padding-left: 20px">
+        <div id="temperature-graph"></div>
+    </div>
+
+<div class="row-fluid">
+
+    <table class="table table-bordered table-hover" style="table-layout: fixed; width: 100%; margin-top: 20px">
+        <tr>
+            <th style="width: 18%"></th>
+            <th style="width: 12%; text-align: right">Actual</th>
+            <th style="width: 35%">Target</th>
+            <th style="width: 35%">Offset</th>
+        </tr>
+        <!-- ko foreach: tools -->
+        <tr data-bind="template: { name: 'temprow-template' }"></tr>
+        <!-- /ko -->
+        <tr data-bind="template: { name: 'temprow-template', data: bedTemp }, visible: hasBed"></tr>
+    </table>
+
+    <script type="text/html" id="temprow-template">
+        <th style="vertical-align: middle" data-bind="text: name"></th>
+        <td style="text-align: right; vertical-align: middle" data-bind="html: formatTemperature(actual())"></td>
+        <td style="vertical-align: middle; overflow: visible">
+            <div class="input-append">
+                <input type="text" class="input-mini text-right tempInput" data-bind="attr: {placeholder: cleanTemperature(target()) }, value: newTarget, enable: $root.isOperational() && $root.loginState.isUser(), event: { keyup: function(d, e) {$root.handleEnter(e, 'target', $data);} }">
+                <span class="add-on">&deg;C</span>
+                <div class="btn-group">
+                    <button type="submit" data-bind="click: $parent.setTarget, enable: $root.isOperational() && $root.loginState.isUser()" class="btn">Set</button>
+                    <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.isOperational() && $root.loginState.isUser()">
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <!-- ko foreach: $root.temperature_profiles -->
+                        <li>
+                            <a href="#" data-bind="click: function() {$root.setTargetFromProfile($parent, $data);}, text: 'Set ' + name + ' (' + ($parent.key() == 'bed' ? bed : extruder) + '&deg;C)'"></a>
+                        </li>
+                        <!-- /ko -->
+                        <li class="divider"></li>
+                        <li>
+                            <a href="#" data-bind="click: $root.setTargetToZero">Off</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </td>
+        <td style="vertical-align: middle">
+            <div class="input-append">
+                <input type="number" min="-50" max="50" class="input-mini text-right tempInput" data-bind="attr: {placeholder: offset}, value: newOffset, enable: $root.isOperational() && $root.loginState.isUser(), event: { keyup: function(d, e) {$root.handleEnter(e, 'offset', $data);} }">
+                <span class="add-on">&deg;C</span>
+                <button type="submit" data-bind="click: $root.setOffset, enable: $root.isOperational() && $root.loginState.isUser()" class="btn">Set</button>
+            </div>
+        </td>
+    </script>
+</div>
+                            </div>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <div id="control"
+                                 class="tab-pane"
+                                 
+                                 
+                                    >
+                                        
+    <div id="webcam_container" tabindex="0" data-bind="event: { keydown: onKeyDown, mouseover: onMouseOver, mouseout: onMouseOut, focus: onFocus }">
+        <img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() }">
+        <div class="keycontrol_overlay" data-bind="visible: showKeycontrols">
+            <div class="keycontrol_overlay_heading">Keyboard controls active <a href="#" data-bind="click: toggleKeycontrolHelp"><i data-bind="css: { 'icon-chevron-down': !keycontrolHelpActive(), 'icon-chevron-up': keycontrolHelpActive() }"></i></a></div>
+            <div data-bind="visible: keycontrolHelpActive">
+                <div class="keycontrol_overlay_column">
+                    <kbd>&rarr;</kbd> / <kbd>&larr;</kbd>: X Axis +/-<br>
+                    <kbd>&uarr;</kbd> / <kbd>&darr;</kbd>: Y Axis +/-<br>
+                    <kbd>W</kbd>, <kbd>Page&uarr;</kbd> / <kbd>S</kbd>, <kbd>Page&darr;</kbd>: Z Axis +/-
+                </div>
+                <div class="keycontrol_overlay_column">
+                    <kbd>Home</kbd>: Home X/Y<br>
+                    <kbd>End</kbd>: Home Z<br>
+                    <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, <kbd>4</kbd>: Stepsize 0.1, 1, 10, 100mm
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-bind="visible: keycontrolPossible">
+        <small class="muted">Hint: If you move your mouse over the picture, you enter keyboard control mode.</small>
+    </div>
+
+
+<div class="jog-panel" style="display: none;" data-bind="visible: loginState.isUser">
+    <!-- XY jogging control panel -->
+    <div class="jog-panel">
+        <h1>X/Y</h1>
+        <div>
+            <button class="btn box" id="control-yinc" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }"><i class="icon-arrow-up"></i></button>
+        </div>
+        <div>
+            <button class="btn box pull-left" id="control-xdec" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="icon-arrow-left"></i></button>
+            <button class="btn box pull-left" id="control-xyhome" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
+            <button class="btn box pull-left" id="control-xinc" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="icon-arrow-right"></i></button>
+        </div>
+        <div>
+            <button class="btn box" id="control-ydec" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }"><i class="icon-arrow-down"></i></button>
+        </div>
+    </div>
+    <!-- Z jogging control panel -->
+    <div class="jog-panel">
+        <h1>Z</h1>
+        <div>
+            <button class="btn box" id="control-zinc" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
+        </div>
+        <div>
+            <button class="btn box" id="control-zhome" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }"><i class="icon-home"></i></button>
+        </div>
+        <div>
+            <button class="btn box" id="control-zdec" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>
+        </div>
+    </div>
+
+    <!-- Jog distance -->
+    <div class="distance">
+        <div class="btn-group" data-toggle="buttons-radio" id="jog_distance">
+            <button type="button" id="control-distance01" class="btn distance" data-distance="0.1" data-bind="enable: loginState.isUser()">0.1</button>
+            <button type="button" id="control-distance1" class="btn distance" data-distance="1" data-bind="enable: loginState.isUser()">1</button>
+            <button type="button" id="control-distance10" class="btn distance active" data-distance="10" data-bind="enable: loginState.isUser()">10</button>
+            <button type="button" id="control-distance100" class="btn distance" data-distance="100" data-bind="enable: loginState.isUser()">100</button>
+        </div>
+    </div>
+
+    <!-- Feed rate -->
+    <input type="number" style="width: 153px" data-bind="slider: {min: 50, max: 150, step: 1, value: feedRate, tooltip: 'hide'}">
+    <button class="btn btn-block" style="width: 169px" data-bind="enable: isOperational() && loginState.isUser(), click: function() { $root.sendFeedRateCommand() }">Feed rate:<span data-bind="text: feedRate() + '%'"></span></button>
+</div>
+<!-- Extrusion control panel -->
+<div class="jog-panel" style="display: none;" data-bind="visible: loginState.isUser">
+    <h1>Tool (E)</h1>
+    <div>
+        <div class="btn-group control-box">
+            <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: isOperational() && !isPrinting() && !isPaused() && loginState.isUser()">
+                Select Tool...
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: tools">
+                <li><a href="#" data-bind="click: $root.sendSelectToolCommand, text: name(), enable: $root.isOperational() && !$root.isPrinting() && !$root.isPaused() && $root.loginState.isUser()"></a></li>
+            </ul>
+        </div>
+        <div class="input-append control-box">
+            <input type="text" class="input-mini text-right" data-bind="value: extrusionAmount, enable: isOperational() && !isPrinting() && loginState.isUser(), attr: {placeholder: settings.printer_defaultExtrusionLength}">
+            <span class="add-on">mm</span>
+        </div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendExtrudeCommand() }">Extrude</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendRetractCommand() }">Retract</button>
+
+        <!-- Flow rate -->
+        <input style="width: 100px" type="number" data-bind="slider: {min: 75, max: 125, step: 1, value: flowRate, tooltip: 'hide'}">
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && loginState.isUser(), click: function() { $root.sendFlowRateCommand() }">Flow rate:<span data-bind="text: flowRate() + '%'"></span></button>
+    </div>
+</div>
+<!-- General control panel -->
+<div class="jog-panel" style="display: none;" data-bind="visible: loginState.isUser">
+    <h1>General</h1>
+    <div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M18'}) }">Motors off</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M106'}) }">Fans on</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() && loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M106 S0'}) }">Fans off</button>
+    </div>
+</div>
+
+<!-- Container for custom controls -->
+<div style="clear: both; display: none;" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }"></div>
+
+<!-- Templates for custom controls -->
+<script type="text/html" id="customControls_sectionTemplate">
+    <h1 data-bind="text: name"></h1>
+
+    <div class="custom_section" data-bind="template: { name: $root.displayMode, foreach: children }"></div>
+</script>
+<script type="text/html" id="customControls_rowTemplate">
+    <div class="row-fluid custom_row">
+        <!-- ko foreach: children -->
+        <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
+        <!-- /ko -->
+    </div>
+</script>
+<script type="text/html" id="customControls_sectionRowTemplate">
+    <h1 data-bind="text: name"></h1>
+
+    <div class="row-fluid custom_row custom_section">
+        <!-- ko foreach: children -->
+        <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
+        <!-- /ko -->
+    </div>
+</script>
+<script type="text/html" id="customControls_commandTemplate">
+    <form class="form-inline custom_command">
+        <button class="btn" data-bind="text: name, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button>
+    </form>
+</script>
+<script type="text/html" id="customControls_feedbackCommandTemplate">
+    <form class="form-inline custom_feedback_command">
+        <button class="btn" data-bind="text: name, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button> <span data-bind="text: output"></span>
+    </form>
+</script>
+<script type="text/html" id="customControls_feedbackTemplate">
+    <div class="custom_feedback">
+        <strong data-bind="text: name"></strong>: <span data-bind="text: output"></span>
+    </div>
+</script>
+<script type="text/html" id="customControls_parametricCommandTemplate">
+    <form class="form-inline custom_parametric_command">
+        <!-- ko foreach: input -->
+            <label data-bind="text: name"></label>
+            <!-- ko if: slider -->
+                <input type="number" style="width: 100px" data-bind="slider: {value: value, min: slider.min, max: slider.max, step: slider.step}">
+            <!-- /ko -->
+            <!-- ko ifnot: slider -->
+                <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value">
+            <!-- /ko -->
+        <!-- /ko -->
+        <button class="btn" data-bind="text: name, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button>
+    </form>
+</script>
+<script type="text/html" id="customControls_emptyTemplate"><div></div></script>
+<!-- End of templates for custom controls -->
+                            </div>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <div id="gcode"
+                                 class="tab-pane"
+                                 
+                                 
+                                    >
+                                        <div data-bind="visible: !waitForApproval()">
+    <input id="gcode_slider_layers" type="text">
+    <canvas id="gcode_canvas" width="568" height="568"></canvas>
+    <input id="gcode_slider_commands" type="text" style="width: 554px">
+
+    <div class="progress" >
+        <div class="bar" style="width: 0%;" data-bind="text: ui_progress_text, style: { width: ui_progress_percentage() + '%' }"></div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span7">
+            <h1>Model info</h1>
+            <p data-bind="html: ui_modelInfo"></p>
+
+            <h1>Layer info</h1>
+            <p data-bind="html: ui_layerInfo"></p>
+        </div>
+        <div class="span5">
+            <h1>Renderer options</h1>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_syncProgress">Sync with job progress
+                </label>
+            </p>
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_centerViewport">Center viewport on model
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_zoomOnModel">Zoom in on model
+                </label>
+            </p>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showMoves">Show moves
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showRetracts">Show retracts
+                </label>
+            </p>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showPrevious">Also show previous layer
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showNext">Also show next layer
+                </label>
+            </p>
+
+            <p>
+                <button class="btn btn-block" data-bind="click: reload, enable: enableReload">Reload</button>
+            </p>
+        </div>
+    </div>
+</div>
+<div data-bind="visible: waitForApproval">
+    <h1>Warning</h1>
+
+    <p>
+        You've selected <strong data-bind="text: selectedFile.name"></strong> for printing which has a size of
+        <strong data-bind="text: formatSize(selectedFile.size())"></strong>. Depending on your machine this
+        might be too large for rendering and cause your browser to become unresponsive or crash.
+    </p>
+
+    <p>
+        Are you sure you want to visualize this file nevertheless?
+    </p>
+
+    <button class="btn btn-warning btn-block" data-bind="click: approveLargeFile">
+        Yes, please visualize <span data-bind="text: selectedFile.name"></span> regardless of its size
+    </button>
+</div>
+                            </div>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <div id="term"
+                                 class="tab-pane"
+                                 
+                                 
+                                    >
+                                        <div class="terminal">
+    <pre id="terminal-output" class="pre-scrollable" data-bind="foreach: displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
+    <small class="pull-left"><button class="btn btn-mini" data-bind="click: toggleAutoscroll, css: {active: autoscrollEnabled}">Autoscroll</button> <span data-bind="text: lineCount"></span></small>
+    <small class="pull-right"><a href="#" data-bind="click: scrollToEnd">Scroll to end</a>&nbsp;|&nbsp;<a href="#" data-bind="click: selectAll">Select all</a></small>
+</div>
+
+<div class="row-fluid">
+    <div class="span6" id="termin-filterpanel">
+        <div data-bind="foreach: filters">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="attr: { value: regex }, checked: $parent.activeFilters"> <span data-bind="text: name"></span>
+            </label>
+        </div>
+    </div>
+    <div class="span6" id="terminal-sendpanel" style="display: none;" data-bind="visible: loginState.isUser">
+        <div class="input-append">
+            <input type="text" id="terminal-command" data-bind="value: command, event: { keyup: function(d,e) { return handleKeyUp(e); }, keydown: function(d,e) { return handleKeyDown(e); } }, enable: isOperational() && loginState.isUser()">
+            <button class="btn" type="button" id="terminal-send" data-bind="click: sendCommand, enable: isOperational() && loginState.isUser()">Send</button>
+        </div>
+        <small class="muted">Hint: Use the arrow up/down keys to recall commands sent previously</small>
+    </div>
+</div>
+                            </div>
+                            <!-- /ko -->
+                        
+                            
+                            <!-- ko allowBindings: false -->
+                            <div id="timelapse"
+                                 class="tab-pane"
+                                 
+                                 
+                                    >
+                                        <div style="display: none;" data-bind="visible: loginState.isUser">
+    <h1>Timelapse Configuration</h1>
+
+    <label for="webcam_timelapse_mode">Timelapse Mode</label>
+    <select id="webcam_timelapse_mode" data-bind="value: timelapseType, enable: isOperational() && !isPrinting() && loginState.isUser()">
+        <option value="off">Off</option>
+        <option value="zchange">On Z Change</option>
+        <option value="timed">Timed</option>
+    </select>
+
+    <label for="webcam_timelapse_fps">Timelapse frame rate (in frames per second)</label>
+    <div class="input-append">
+        <input type="text" class="input-mini" id="webcam_timelapse_fps" data-bind="value: timelapseFps, valueUpdate: 'afterkeydown', enable: isOperational() && !isPrinting() && loginState.isUser() && timelapseTypeSelected()">
+        <span class="add-on">fps</span>
+    </div>
+
+    <label for="webcam_timelapse_postRoll">Timelapse post roll (in rendered seconds)</label>
+    <div class="input-append">
+        <input type="text" class="input-mini" id="webcam_timelapse_postRoll" data-bind="value: timelapsePostRoll, valueUpdate: 'afterkeydown', enable: isOperational() && !isPrinting() && loginState.isUser() && timelapseTypeSelected()">
+        <span class="add-on">sec</span>
+    </div>
+
+    <div id="webcam_timelapse_timedsettings" data-bind="visible: intervalInputEnabled">
+        <label for="webcam_timelapse_interval">Interval</label>
+        <div class="input-append">
+            <input type="text" class="input-mini" id="webcam_timelapse_interval" data-bind="value: timelapseTimedInterval, valueUpdate: 'afterkeydown', enable: isOperational() && !isPrinting() && loginState.isUser()">
+            <span class="add-on">sec</span>
+        </div>
+    </div>
+
+    <div data-bind="visible: loginState.isAdmin">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: persist"> Save as default
+        </label>
+    </div>
+
+    <div>
+        <button class="btn" data-bind="click: save, enable: saveButtonEnabled">Save config</button>
+    </div>
+</div>
+
+<h1>Finished Timelapses</h1>
+
+<div class="pull-right">
+    <small>Sort by: <a href="#" data-bind="click: function() { listHelper.changeSorting('name'); }">Name (ascending)</a> | <a href="#" data-bind="click: function() { listHelper.changeSorting('creation'); }">Creation date (descending)</a> | <a href="#" data-bind="click: function() { listHelper.changeSorting('size'); }">Size (descending)</a></small>
+</div>
+<table class="table table-striped table-hover table-condensed table-hover" id="timelapse_files">
+    <thead>
+    <tr>
+        <th class="timelapse_files_name">Name</th>
+        <th class="timelapse_files_size">Size</th>
+        <th class="timelapse_files_action">Action</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: listHelper.paginatedItems">
+    <tr data-bind="attr: {title: name}">
+        <td class="timelapse_files_name" data-bind="text: name"></td>
+        <td class="timelapse_files_size" data-bind="text: size"></td>
+        <td class="timelapse_files_action"><a href="#" class="icon-trash" data-bind="click: function() { if ($root.loginState.isUser()) { $parent.removeFile($data.name); } else { return; } }, css: {disabled: !$root.loginState.isUser()}"></a>&nbsp;|&nbsp;<a href="#" class="icon-download" data-bind="attr: {href: url}"></a></td>
+    </tr>
+    </tbody>
+</table>
+<div class="pagination pagination-mini pagination-centered">
+    <ul>
+        <li data-bind="css: {disabled: listHelper.currentPage() === 0}"><a href="#" data-bind="click: listHelper.prevPage">�</a></li>
+    </ul>
+    <ul data-bind="foreach: listHelper.pages">
+        <li data-bind="css: { active: $data.number === $root.listHelper.currentPage(), disabled: $data.number === -1 }"><a href="#" data-bind="text: $data.text, click: function() { $root.listHelper.changePage($data.number); }"></a></li>
+    </ul>
+    <ul>
+        <li data-bind="css: {disabled: listHelper.currentPage() === listHelper.lastPage()}"><a href="#" data-bind="click: listHelper.nextPage">�</a></li>
+    </ul>
+</div>
+                            </div>
+                            <!-- /ko -->
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <ul class="pull-left muted">
+                    <li><small>Version: <span class="version">1.2.0-dev-619-gdee205f (devel branch)</span></small></li>
+                </ul>
+                <ul class="pull-right">
+                    <li><a href="http://octoprint.org"><i class="icon-home"></i> Homepage</a></li>
+                    <li><a href="https://github.com/foosel/OctoPrint/"><i class="icon-download"></i> Sourcecode</a></li>
+                    <li><a href="https://github.com/foosel/OctoPrint/wiki"><i class="icon-book"></i> Documentation</a></li>
+                    <li><a href="https://github.com/foosel/OctoPrint/issues"><i class="icon-flag"></i> Bugs and Requests</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Dialogs -->
+        <div id="confirmation_dialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Are you sure?</h3>
+    </div>
+    <div class="modal-body">
+        <p class="confirmation_dialog_message"></p>
+        <p>Are you sure you want to proceed?</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>
+        <a href="#" class="btn btn-danger confirmation_dialog_acknowledge">Proceed</a>
+    </div>
+</div>
+        <div id="first_run_dialog" class="modal hide fade" data-backdrop="static" data-keyboard="false">
+    <div class="modal-header">
+        <h3><i class="icon-warning-sign"></i> Configure Access Control</h3>
+    </div>
+    <div class="modal-body">
+        <p>
+            <strong>Please read the following, it is very important for your printer's health!</strong>
+        </p>
+            <p>
+                OctoPrint by default now ships with Access Control enabled, meaning you won't be able to do anything with the
+                printer unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
+                malicious intent - to gain access to your printer</strong> via the internet or another untrustworthy network
+                and using it in such a way that it is damaged or worse (i.e. causes a fire).
+            </p>
+            <p>
+                It looks like you haven't configured access control yet. Please <strong>set up an username and password</strong> for the
+                initial administrator account who will have full access to both the printer and OctoPrint's settings, then click
+                on "Keep Access Control Enabled":
+            </p>
+        <form class="form-horizontal">
+            <div class="control-group" data-bind="css: {success: validUsername()}">
+                <label class="control-label" for="first_run_username">Username</label>
+                <div class="controls">
+                    <input type="text" class="input-medium" data-bind="value: username, valueUpdate: 'afterkeydown'">
+                </div>
+            </div>
+            <div class="control-group" data-bind="css: {success: validPassword()}">
+                <label class="control-label" for="first_run_username">Password</label>
+                <div class="controls">
+                    <input type="password" class="input-medium" data-bind="value: password, valueUpdate: 'afterkeydown'">
+                </div>
+            </div>
+            <div class="control-group" data-bind="css: {error: passwordMismatch(), success: validPassword() && !passwordMismatch()}">
+                <label class="control-label" for="first_run_username">Confirm Password</label>
+                <div class="controls">
+                    <input type="password" class="input-medium" data-bind="value: confirmedPassword, valueUpdate: 'afterkeydown'">
+                    <span class="help-inline" data-bind="visible: passwordMismatch()">Passwords do not match</span>
+                </div>
+            </div>
+        </form>
+        <p>
+            <strong>Note:</strong> In case that your OctoPrint installation is only accessible from within a trustworthy network and you don't
+            need Access Control for other reasons, you may alternatively disable Access Control. You should only
+            do this if you are absolutely certain that only people you know and trust will be able to connect to it.
+        </p>
+            <p>
+                <strong>Do NOT underestimate the risk of an unsecured access from the internet to your printer!</strong>
+            </p>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-danger" data-bind="click: disableAccessControl">Disable Access Control</a>
+        <a href="#" class="btn btn-primary" data-bind="click: keepAccessControl, enable: validData(), css: {disabled: !validData()}">Keep Access Control Enabled</a>
+    </div>
+</div>
+        <div id="settings_dialog" class="modal hide fade container" tabindex="-1" role="dialog" aria-labelledby="settings_dialog_label" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h3 id="settings_dialog_label">OctoPrint Settings</h3>
+    </div>
+    <div class="modal-body">
+        <div class="tabbable">
+            <ul class="nav nav-list span4" id="settingsTabs">
+                
+                
+                    
+                    
+                        <li class="nav-header">Printer</li>
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_serialConnection_link"
+                            
+                            class="active "
+                            
+                                >
+                            <a href="#settings_serialConnection" data-toggle="tab">Serial Connection</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_printerProfiles_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_printerProfiles" data-toggle="tab">Printer Profiles</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_temperature_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_temperature" data-toggle="tab">Temperatures</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_terminalFilters_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_terminalFilters" data-toggle="tab">Terminal Filters</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_gcodeScripts_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_gcodeScripts" data-toggle="tab">GCODE Scripts</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        <li class="nav-header">Features</li>
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_features_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_features" data-toggle="tab">Features</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_webcam_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_webcam" data-toggle="tab">Webcam</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_users_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_users" data-toggle="tab">Access Control</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_api_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_api" data-toggle="tab">API</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        <li class="nav-header">OctoPrint</li>
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_folders_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_folders" data-toggle="tab">Folders</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        
+                        <li id="settings_appearance_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_appearance" data-toggle="tab">Appearance</a>
+                        </li>
+                        
+                    
+                
+                    
+                    
+                        <!-- ko allowBindings: false -->
+                        <li id="settings_logs_link"
+                            
+                            class=" "
+                            
+                                >
+                            <a href="#settings_logs" data-toggle="tab">Logs</a>
+                        </li>
+                        <!-- /ko -->
+                    
+                
+                    
+                    
+                        <li class="nav-header">Plugins</li>
+                    
+                
+                    
+                    
+                        <!-- ko allowBindings: false -->
+                        <li id="settings_plugin_cura_link"
+                            data-bind="allowBindings: true"
+                            class=" "
+                            
+                                >
+                            <a href="#settings_plugin_cura" data-toggle="tab">CuraEngine</a>
+                        </li>
+                        <!-- /ko -->
+                    
+                
+            </ul>
+
+            <div class="tab-content span8">
+                
+                
+                    
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_serialConnection"
+                             
+                             class="tab-pane active "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group" title="Serial port to connect to, setting this to AUTO will make OctoPrint try to automatically find the right setting">
+        <label class="control-label" for="settings-serialPort">Serial Port</label>
+        <div class="controls">
+            <select id="settings-serialPort" data-bind="options: serial_portOptions, optionsCaption: 'AUTO', value: serial_port"></select>
+        </div>
+    </div>
+    <div class="control-group" title="Serial baud rate to connect with, setting this to AUTO will make OctoPrint try to automatically find the right setting">
+        <label class="control-label" for="settings-baudrate">Baudrate</label>
+        <div class="controls">
+            <select id="settings-baudrate" data-bind="options: serial_baudrateOptions, optionsCaption: 'AUTO', value: serial_baudrate"></select>
+        </div>
+    </div>
+    <div class="control-group" title="Makes OctoPrint try to connect to the printer automatically during start up">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: serial_autoconnect" id="settings-serialAutoconnect"> Auto-connect to printer on server start
+            </label>
+        </div>
+    </div>
+    <div class="control-group" title="Time after which the communication with your printer will be considered timed out if nothing was sent by your printer (and an attempt to get it talking again will be done). Increase this if your printer takes longer than this for some moves. This is also the interval in which the temperature will be polled from the printer while not printing.">
+        <label class="control-label" for="settings-serialTimeoutCommunication">Communication timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: serial_timeoutCommunication" id="settings-serialTimeoutCommunication">
+                <span class="add-on">s</span>
+            </div>
+        </div>
+    </div>
+    <div class="control-group" title="Interval in which to poll for the temperature information from the printer while printing">
+        <label class="control-label" for="settings-serialTimeoutTemperature">Temperature timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: serial_timeoutTemperature" id="settings-serialTimeoutTemperature">
+                <span class="add-on">s</span>
+            </div>
+        </div>
+    </div>
+    <div class="control-group" title="Interval in which to poll for the SD printing status information from the printer while printing">
+        <label class="control-label" for="settings-serialTimeoutSdStatus">SD status timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: serial_timeoutSdStatus" id="settings-serialTimeoutSdStatus">
+                <span class="add-on">s</span>
+            </div>
+        </div>
+    </div>
+    <div class="control-group" title="Time after which a connection attempt to the printer will be considered as having failed">
+        <label class="control-label" for="settings-serialTimeoutConnection">Connection timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: serial_timeoutConnection" id="settings-serialTimeoutConnection">
+                <span class="add-on">s</span>
+            </div>
+        </div>
+    </div>
+    <div class="control-group" title="Time after which to consider an auto detection attempt to have failed if no successful connection is detected">
+        <label class="control-label" for="settings-serialTimeoutDetection">Autodetection timeout</label>
+        <div class="controls">
+            <div class="input-append">
+                <input type="number" step="any" min="0" class="input-mini text-right" data-bind="value: serial_timeoutDetection" id="settings-serialTimeoutDetection">
+                <span class="add-on">s</span>
+            </div>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: serial_log" id="settings-serialLog"> Log communication to serial.log (might negatively impact performance) <span class="label label-important">Warning</span>
+            </label>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_printerProfiles"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <h3>Printer Profiles</h3>
+<table class="table table-striped table-hover table-condensed table-hover" id="settings_printerProfiles_profiles">
+    <thead>
+    <tr>
+        <th class="settings_printerProfiles_profiles_name">Name</th>
+        <th class="settings_printerProfiles_profiles_model">Model</th>
+        <th class="settings_printerProfiles_profiles_action">Action</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: printerProfiles.profiles.paginatedItems">
+    <tr data-bind="attr: {title: name}">
+        <td class="settings_printerProfiles_profiles_name"><span class="icon-star" data-bind="invisible: !isdefault()"></span> <span data-bind="text: name"></span></td>
+        <td class="settings_printerProfiles_profiles_model" data-bind="text: model"></td>
+        <td class="settings_printerProfiles_profiles_action">
+            <a href="#" class="icon-star" title="Set as default profile" data-bind="click: function() { $root.printerProfiles.makeDefault($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-pencil" title="Edit Profile" data-bind="click: function() { $root.printerProfiles.showEditProfileDialog($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-trash" title="Delete Profile" data-bind="click: function() { $root.printerProfiles.removeProfile($data); }"></a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="pagination pagination-mini pagination-centered">
+    <ul>
+        <li data-bind="css: {disabled: printerProfiles.profiles.currentPage() === 0}"><a href="#" data-bind="click: printerProfiles.profiles.prevPage">�</a></li>
+    </ul>
+    <ul data-bind="foreach: printerProfiles.profiles.pages">
+        <li data-bind="css: { active: $data.number === $root.printerProfiles.profiles.currentPage(), disabled: $data.number === -1 }"><a href="#" data-bind="text: $data.text, click: function() { $root.printerProfiles.profiles.changePage($data.number); }"></a></li>
+    </ul>
+    <ul>
+        <li data-bind="css: {disabled: printerProfiles.profiles.currentPage() === printerProfiles.profiles.lastPage()}"><a href="#" data-bind="click: printerProfiles.profiles.nextPage">�</a></li>
+    </ul>
+</div>
+
+
+<button class="btn pull-right" data-bind="click: function() { $root.printerProfiles.showEditProfileDialog(); }">Add Profile...</button>
+
+<div id="settings_printerProfiles_editDialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 class="modal-title"></h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label">Name</label>
+                <div class="controls">
+                    <input type="text" data-bind="value: printerProfiles.editorName">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Identifier</label>
+                <div class="controls">
+                    <input type="text" data-bind="value: printerProfiles.editorIdentifier, enable: $root.printerProfiles.editorNew, css: {disabled: !$root.printerProfiles.editorNew()}">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Model</label>
+                <div class="controls">
+                    <input type="text" data-bind="value: printerProfiles.editorModel">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Color</label>
+                <div class="controls">
+                    <select data-bind="value: printerProfiles.editorColor, options: printerProfiles.availableColors, optionsText: 'name', optionsValue: 'key'">
+                    </select>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Form Factor</label>
+                <div class="controls">
+                    <label class="radio"><input type="radio" name="printerProfileFormFactorGroup" value="rectangular" data-bind="checked: printerProfiles.editorVolumeFormFactor"> Rectangular</label>
+                </div>
+                <div class="controls">
+                    <label class="radio"><input type="radio" name="printerProfileFormFactorGroup" value="circular" data-bind="checked: printerProfiles.editorVolumeFormFactor"> Circular</label>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Volume</label>
+                <div class="controls form-inline">
+                    <label>X</label>
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: printerProfiles.editorVolumeWidth">
+                        <span class="add-on">mm</span>
+                    </div>
+                </div>
+                <div class="controls form-inline">
+                    <label>Y</label>
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: printerProfiles.editorVolumeDepth">
+                        <span class="add-on">mm</span>
+                    </div>
+                </div>
+                <div class="controls form-inline">
+                    <label>Z</label>
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: printerProfiles.editorVolumeHeight">
+                        <span class="add-on">mm</span>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Heated Bed</label>
+                <div class="controls">
+                    <input type="checkbox" data-bind="checked: printerProfiles.editorHeatedBed">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Axis</label>
+                <div class="controls form-inline">
+                    <label>X</label>
+                    <div class="input-append">
+                        <input type="number" class="input-mini text-right" data-bind="value: printerProfiles.editorAxisXSpeed">
+                        <span class="add-on">mm/min</span>
+                    </div>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: printerProfiles.editorAxisXInverted"> Invert control
+                    </label>
+                </div>
+                <div class="controls form-inline">
+                    <label>Y</label>
+                    <div class="input-append">
+                        <input type="number" class="input-mini text-right" data-bind="value: printerProfiles.editorAxisYSpeed">
+                        <span class="add-on">mm/min</span>
+                    </div>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: printerProfiles.editorAxisYInverted"> Invert control
+                    </label>
+                </div>
+                <div class="controls form-inline">
+                    <label>Z</label>
+                    <div class="input-append">
+                        <input type="number" class="input-mini text-right" data-bind="value: printerProfiles.editorAxisZSpeed">
+                        <span class="add-on">mm/min</span>
+                    </div>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: printerProfiles.editorAxisZInverted"> Invert control
+                    </label>
+                </div>
+                <div class="controls form-inline">
+                    <label>E</label>
+                    <div class="input-append">
+                        <input type="number" class="input-mini text-right" data-bind="value: printerProfiles.editorAxisESpeed">
+                        <span class="add-on">mm/min</span>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Nozzle Diameter</label>
+                <div class="controls">
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: printerProfiles.editorNozzleDiameter">
+                        <span class="add-on">mm</span>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Number of Extruders</label>
+                <div class="controls">
+                    <input type="number" class="input-mini text-right" min="1" max="5" data-bind="value: printerProfiles.editorExtruders">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Extruder Offsets</label>
+                <!-- ko foreach: printerProfiles.koEditorExtruderOffsets -->
+                <div class="controls form-inline">
+                    <label>X:</label>
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: x">
+                        <span class="add-on">mm</span>
+                    </div>
+                    <label>Y:</label>
+                    <div class="input-append">
+                        <input type="number" step="0.01" class="input-mini text-right" data-bind="value: y">
+                        <span class="add-on">mm</span>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary btn-confirm">Confirm</button>
+    </div>
+</div>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_temperature"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="row-fluid">
+        <div class="offset3 span3"><h4>Extruder</h4></div>
+        <div class="span3"><h4>Bed</h4></div>
+    </div>
+    <div data-bind="foreach: temperature_profiles">
+        <div class="row-fluid" style="margin-bottom: 5px">
+            <div class="span3">
+                <input type="text" class="span12 text-right" data-bind="value: name">
+            </div>
+            <div class="input-append span3">
+                <input type="number" class="input-mini text-right" data-bind="value: extruder">
+                <span class="add-on">&deg;C</span>
+            </div>
+            <div class="input-append span3">
+                <input type="number" class="input-mini text-right" data-bind="value: bed">
+                <span class="add-on">&deg;C</span>
+            </div>
+            <div class="span2">
+                <a title="Remove profile" class="btn btn-danger" data-bind="click: $parent.removeTemperatureProfile"><i class="icon-trash"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="offset9 span2">
+            <a title="Add Profile" class="btn btn-primary" data-bind="click: addTemperatureProfile"><i class="icon-plus"></i></a>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_terminalFilters"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="row-fluid">
+        <div class="span4"><h4>Name</h4></div>
+        <div class="span6"><h4>RegExp <small><a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions">?</a></small></h4></div>
+    </div>
+    <div data-bind="foreach: terminalFilters">
+        <div class="row-fluid" style="margin-bottom: 5px">
+            <div class="span4">
+                <input type="text" class="span12" data-bind="value: name">
+            </div>
+            <div class="span6">
+                <input type="text" class="span12" data-bind="value: regex">
+            </div>
+            <div class="span2">
+                <a title="Remove Filter" class="btn btn-danger" data-bind="click: $parent.removeTerminalFilter"><i class="icon-trash"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="offset10 span2">
+            <a title="Add Filter" class="btn btn-primary" data-bind="click: addTerminalFilter"><i class="icon-plus"></i></a>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_gcodeScripts"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label">Before print job starts</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_beforePrintStarted"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After print job completes</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_afterPrintDone"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After print job is cancelled</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_afterPrintCancelled"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After print job is paused</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_afterPrintPaused"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Before print job is resumed</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_beforePrintResumed"></textarea>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">After connection to printer is established</label>
+        <div class="controls">
+            <textarea rows="4" class="block" data-bind="value: scripts_gcode_afterPrinterConnected"></textarea>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_features"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_temperatureGraph" id="settings-featureTemperatureGraph"> Enable Temperature Graph
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_gcodeViewer" id="settings-featureGcodeViewer"> Enable GCode Visualizer
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_sdSupport" id="settings-featureSdSupport"> Enable SD support
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_keyboardControl" id="settings-featureKeyboardControl"> Enable Keyboard Control
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_sdAlwaysAvailable" id="settings-featureSdAlwaysAvailable"> Always assume SD card is present <span class="label">Repetier</span>
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_waitForStart" id="settings-featureWaitForStart"> Wait for <code>start</code> on connect
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_alwaysSendChecksum" id="settings-featureAlwaysSendChecksum"> Send a checksum with <strong>every</strong> command  <span class="label">Repetier</span>
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_repetierTargetTemp" id="settings-featureRepetierTargetTemp"> Support <code>TargetExtr%n</code>/<code>TargetBed</code> target temperature format <span class="label">Repetier</span>
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: feature_swallowOkAfterResend" id="settings-swallowOkAfterResend"> Swallow the first "ok" after a resend response
+            </label>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_webcam"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group" title="URL to embed into the UI for live viewing of the webcam stream">
+        <label class="control-label" for="settings-webcamStreamUrl">Stream URL</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: webcam_streamUrl" id="settings-webcamStreamUrl">
+        </div>
+    </div>
+    <div class="control-group" title="URL to use for retrieving webcam snapshot images for timelapse creation">
+        <label class="control-label" for="settings-webcamSnapshotUrl">Snapshot URL</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: webcam_snapshotUrl" id="settings-webcamSnapshotUrl">
+        </div>
+    </div>
+    <div class="control-group" title="Full path to the FFMPEG binary">
+        <label class="control-label" for="settings-webcamFfmpegPath">Path to FFMPEG</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: webcam_ffmpegPath" id="settings-webcamFfmpegPath">
+        </div>
+    </div>
+    <div class="control-group" title="Bitrate to use for encoding the timelapse video">
+        <label class="control-label" for="settings-webcamBitrate">Timelapse bitrate</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: webcam_bitrate" id="settings-webcamBitrate">
+        </div>
+    </div>
+    <div class="control-group" title="Number of FFMPEG encoding threads">
+        <label class="control-label" for="settings-webcam_ffmpegThreads">FFMPEG threads</label>
+        <div class="controls">
+            <input class="input-block-level" data-bind="value: webcam_ffmpegThreads" id="settings-webcamFfmpegThreads" type="number" step="1" min="1">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: webcam_watermark" id="settings-webcamWatermark"> Enable OctoPrint watermark in timelapse movies
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: webcam_flipH" id="settings-webcamFlipH"> Flip webcam horizontally
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: webcam_flipV" id="settings-webcamFlipV"> Flip webcam vertically
+            </label>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_users"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <table class="table table-condensed table-hover" id="system_users">
+    <thead>
+    <tr>
+        <th class="settings_users_name">Name</th>
+        <th class="settings_users_active">Active</th>
+        <th class="settings_users_admin">Admin</th>
+        <th class="settings_users_actions">Action</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: users.listHelper.paginatedItems">
+    <tr>
+        <td class="settings_users_name"><span data-bind="text: name"></span><span class="muted" data-bind="visible: $root.api_enabled() && apikey"><br /><small>API Key: <span data-bind="text: apikey"></span></small></span></td>
+        <td class="settings_users_active"><i data-bind="css: { 'icon-check': active, 'icon-check-empty': !active }"></i></td>
+        <td class="settings_users_admin"><i data-bind="css: { 'icon-check': admin, 'icon-check-empty': !admin }"></i></td>
+        <td class="settings_users_actions">
+            <a href="#" class="icon-pencil" title="Update User" data-bind="click: function() { $root.users.showEditUserDialog($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-key" title="Change password" data-bind="click: function() { $root.users.showChangePasswordDialog($data); }"></a>&nbsp;|&nbsp;<a href="#" class="icon-trash" title="Delete user" data-bind="click: function() { $root.users.removeUser($data); }"></a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="pagination pagination-mini pagination-centered">
+    <ul>
+        <li data-bind="css: {disabled: users.listHelper.currentPage() === 0}"><a href="#" data-bind="click: users.listHelper.prevPage">�</a></li>
+    </ul>
+    <ul data-bind="foreach: users.listHelper.pages">
+        <li data-bind="css: { active: $data.number === $root.users.listHelper.currentPage(), disabled: $data.number === -1 }"><a href="#" data-bind="text: $data.text, click: function() { $root.users.listHelper.changePage($data.number); }"></a></li>
+    </ul>
+    <ul>
+        <li data-bind="css: {disabled: users.listHelper.currentPage() === users.listHelper.lastPage()}"><a href="#" data-bind="click: users.listHelper.nextPage">�</a></li>
+    </ul>
+</div>
+
+<button title="Add user" class="btn" data-bind="click: $root.users.showAddUserDialog"><i class="icon-plus"></i> Add user</button>
+
+<!-- Modals for user management -->
+
+<div id="settings-usersDialogAddUser" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Add user</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="settings-usersDialogAddUserName">Username</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" id="settings-usersDialogAddUserName" data-bind="value: $root.users.editorUsername" required>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="settings-usersDialogAddUserPassword1">Password</label>
+                <div class="controls">
+                    <input type="password" class="input-block-level" id="settings-usersDialogAddUserPassword1" data-bind="value: $root.users.editorPassword" required>
+                </div>
+            </div>
+            <div class="control-group" data-bind="css: {error: $root.users.editorPasswordMismatch()}">
+                <label class="control-label" for="settings-usersDialogAddUserPassword2">Repeat Password</label>
+                <div class="controls">
+                    <input type="password" class="input-block-level" id="settings-usersDialogAddUserPassword2" data-bind="value: $root.users.editorRepeatedPassword, valueUpdate: 'afterkeydown'" required>
+                    <span class="help-inline" data-bind="visible: $root.users.editorPasswordMismatch()">Passwords do not match</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" id="settings-usersDialogAddUserActive" data-bind="checked: $root.users.editorActive"> Active
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" id="settings-usersDialogAddUserAdmin" data-bind="checked: $root.users.editorAdmin"> Admin
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary" data-bind="click: function() { $root.users.confirmAddUser(); }, enable: !$root.users.editorPasswordMismatch()">Confirm</button>
+    </div>
+</div>
+
+<div id="settings-usersDialogEditUser" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Edit user "<span data-bind="text: $root.users.editorUsername"></span>"</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" id="settings-usersDialogEditUserActive" data-bind="checked: $root.users.editorActive"> Active
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" id="settings-usersDialogEditUserAdmin" data-bind="checked: $root.users.editorAdmin"> Admin
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary" data-bind="click: function() { $root.users.confirmEditUser(); }">Confirm</button>
+    </div>
+</div>
+
+<div id="settings-usersDialogChangePassword" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Change password for user "<span data-bind="text: $root.users.editorUsername"></span>"</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="settings-usersDialogChangePasswordPassword1">New Password</label>
+                <div class="controls">
+                    <input type="password" class="input-block-level" id="settings-usersDialogChangePasswordPassword1" data-bind="value: $root.users.editorPassword" required>
+                </div>
+            </div>
+            <div class="control-group" data-bind="css: {error: $root.users.editorPasswordMismatch()}">
+                <label class="control-label" for="settings-usersDialogChangePasswordPassword2">Repeat Password</label>
+                <div class="controls">
+                    <input type="password" class="input-block-level" id="settings-usersDialogChangePasswordPassword2" data-bind="value: $root.users.editorRepeatedPassword, valueUpdate: 'afterkeydown'" required>
+                    <span class="help-inline" data-bind="visible: $root.users.editorPasswordMismatch()">Passwords do not match</span>
+                </div>
+            </div>
+            <fieldset data-bind="visible: api_enabled">
+                <legend>Apikey</legend>
+                <div class="control-group">
+                    <label class="control-label">Current API Key</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input type="text" class="input-block-level uneditable-input" data-bind="value: $root.users.editorApikey, valueUpdate: 'input', attr: {placeholder: 'N/A'}">
+                            <a class="btn" title="Generate new Apikey" data-bind="click: function() { $root.users.confirmGenerateApikey(); }"><i class="icon-refresh"></i></a>
+                            <a class="btn btn-danger" title="Delete Apikey" data-bind="click: function() { $root.users.confirmDeleteApikey(); }"><i class="icon-trash"></i></a>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- TODO Figure out issue where text isn't properly bound and hence the QR code is worthless
+                <div class="control-group">
+                    <label class="control-label">QR Code</label>
+                    <div class="controls">
+                        <div data-bind="qrcode: {text: $root.users.editorApiKey, size: 150}"></div>
+                    </div>
+                </div>
+                -->
+            </fieldset>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary" data-bind="click: function() { $root.users.confirmChangePassword(); }, enable: !$root.users.editorPasswordMismatch()">Confirm</button>
+    </div>
+</div>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_api"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal" onsubmit="return false;">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" id="settings-apiEnabled" data-bind="checked: api_enabled"> Enable
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" id="settings-apiCors" data-bind="checked: api_allowCrossOrigin"> Allow <a href="https://en.wikipedia.org/wiki/Cross-origin_resource_sharing">Cross Origin Resource Sharing (CORS)</a>
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-apiKey">API Key</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: api_key, valueUpdate: 'afterkeydown'" id="settings-apikey">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">QR Code</label>
+        <div class="controls">
+            <div data-bind="qrcode: {text: api_key, size: 180}"></div>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_folders"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label" for="settings-folderUploads">Upload Folder</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: folder_uploads" id="settings-folderUploads">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-folderTimelapse">Timelapse Folder</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: folder_timelapse" id="settings-folderTimelapse">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-folderTimelapseTemp">Timelapse Temp Folder</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: folder_timelapseTmp" id="settings-folderTimelapseTemp">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-folderLogs">Logs Folder</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: folder_logs" id="settings-folderLogs">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-watchedLogs">Watched Folder</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: folder_watched" id="settings-folderWatched">
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        
+                        <div id="settings_appearance"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <form class="form-horizontal">
+    <div class="control-group" title="Name of this OctoPrint instance, will be shown in the navigation bar and broadcast on the network">
+        <label class="control-label" for="settings-appearanceName">Title</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: appearance_name" id="settings-appearanceName">
+        </div>
+    </div>
+    <div class="control-group" title="Personalize the color of the navigation bar - maybe to match your printer?">
+        <label class="control-label" for="settings-appearanceColor">Color</label>
+        <div class="controls">
+            <select id="settings-appearanceColor" data-bind="value: appearance_color, options: appearance_available_colors, optionsText: 'name', optionsValue: 'key'">
+            </select>
+        </div>
+    </div>
+    <div class="control-group" title="For acrylic printers ;)">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: appearance_colorTransparent"> Transparent Color
+            </label>
+        </div>
+    </div>
+</form>
+                        </div>
+                        
+                    
+                
+                    
+                    
+                        <!-- ko allowBindings: false -->
+                        <div id="settings_logs"
+                             
+                             class="tab-pane  "
+                             
+                                >
+                            <div id="logs">
+    <h1>Logs</h1>
+
+    <div class="pull-right">
+        <small>
+            Sort by: <a href="#" data-bind="click: function() { listHelper.changeSorting('name'); }">Name (ascending)</a> | <a href="#" data-bind="click: function() { listHelper.changeSorting('modification'); }">Modification date (descending)</a> | <a href="#" data-bind="click: function() { listHelper.changeSorting('size'); }">Size (descending)</a>
+        </small>
+    </div>
+    <table class="table table-striped table-hover table-condensed table-hover" id="log_files">
+        <thead>
+        <tr>
+            <th class="settings_logs_name">Name</th>
+            <th class="settings_logs_size">Size</th>
+            <th class="settings_logs_date">Date</th>
+            <th class="settings_logs_action">Action</th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: listHelper.paginatedItems">
+        <tr data-bind="attr: {title: name}">
+            <td class="settings_logs_name" data-bind="text: name"></td>
+            <td class="settings_logs_size" data-bind="text: formatSize(size)"></td>
+            <td class="settings_logs_date" data-bind="text: formatDate(date)"></td>
+            <td class="settings_logs_action">
+                <a href="#" class="icon-trash" data-bind="click: function() { if ($root.loginState.isUser()) { $parent.removeFile($data.name); } else { return; } }, css: {disabled: !$root.loginState.isUser()}"></a>&nbsp;|&nbsp;<a href="#" class="icon-download" data-bind="attr: {href: refs.download}"></a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="pagination pagination-mini pagination-centered">
+        <ul>
+            <li data-bind="css: {disabled: listHelper.currentPage() === 0}">
+                <a href="#" data-bind="click: listHelper.prevPage">�</a>
+            </li>
+        </ul>
+        <ul data-bind="foreach: listHelper.pages">
+            <li data-bind="css: { active: $data.number === $root.listHelper.currentPage(), disabled: $data.number === -1 }">
+                <a href="#" data-bind="text: $data.text, click: function() { $root.listHelper.changePage($data.number); }"></a>
+            </li>
+        </ul>
+        <ul>
+            <li data-bind="css: {disabled: listHelper.currentPage() === listHelper.lastPage()}">
+                <a href="#" data-bind="click: listHelper.nextPage">�</a>
+            </li>
+        </ul>
+    </div>
+</div>
+                        </div>
+                        <!-- /ko -->
+                    
+                
+                    
+                    
+                
+                    
+                    
+                        <!-- ko allowBindings: false -->
+                        <div id="settings_plugin_cura"
+                             data-bind="allowBindings: true"
+                             class="tab-pane  "
+                             
+                                >
+                            <h4>General</h4>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label" for="settings-cura-path">Path to CuraEngine</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.cura.cura_engine">
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.cura.debug_logging"> Log the output of CuraEngine to plugin_cura_engine.log
+            </label>
+        </div>
+    </div>
+</form>
+
+<h4>Profiles</h4>
+
+<div class="pull-right">
+    <small>Sort by: <a href="#" data-bind="click: function() { profiles.changeSorting('id'); }">Identifier (ascending)</a> | <a href="#" data-bind="click: function() { profiles.changeSorting('name'); }">Name (ascending)</a></small>
+</div>
+<table class="table table-striped table-hover table-condensed table-hover">
+    <thead>
+    <tr>
+        <th class="settings_plugin_cura_profiles_key">Identifier</th>
+        <th class="settings_plugin_cura_profiles_name">Name</th>
+        <th class="settings_plugin_cura_profiles_actions">Actions</th>
+    </tr>
+    </thead>
+    <tbody data-bind="foreach: profiles.paginatedItems">
+        <tr data-bind="attr: {title: description}">
+            <td class="settings_plugin_cura_profiles_key"><span class="icon-star" data-bind="invisible: !isdefault()"></span> <span data-bind="text: key"></span></td>
+            <td class="settings_plugin_cura_profiles_name" data-bind="text: name"></td>
+            <td class="settings_plugin_cura_profiles_actions">
+                <a href="#" class="icon-star" title="Make default" data-bind="enable: !isdefault(), css: {disabled: isdefault()}, click: function() { if (!$data.isdefault()) { $root.makeProfileDefault($data); } }"></a>&nbsp;|&nbsp;<a href="#" class="icon-trash" title="Delete Profile" data-bind="enable: !isdefault(), css: {disabled: isdefault()}, click: function() { if (!$data.isdefault()) { $root.removeProfile($data); } }"></a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div class="pagination pagination-mini pagination-centered">
+    <ul>
+        <li data-bind="css: {disabled: profiles.currentPage() === 0}"><a href="#" data-bind="click: profiles.prevPage">�</a></li>
+    </ul>
+    <ul data-bind="foreach: profiles.pages">
+        <li data-bind="css: { active: $data.number === $root.profiles.currentPage(), disabled: $data.number === -1 }"><a href="#" data-bind="text: $data.text, click: function() { $root.profiles.changePage($data.number); }"></a></li>
+    </ul>
+    <ul>
+        <li data-bind="css: {disabled: profiles.currentPage() === profiles.lastPage()}"><a href="#" data-bind="click: profiles.nextPage">�</a></li>
+    </ul>
+</div>
+
+<button class="btn pull-right" data-bind="click: function() { $root.showImportProfileDialog() }">Import Profile...</button>
+
+<div id="settings_plugin_cura_import" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Import Existing Cura Profile</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label">Profile ini file</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                <span class="btn fileinput-button">
+                    <span>Browse...</span>
+                    <input id="settings-cura-import" type="file" name="file" data-url="/plugin/cura/import">
+                </span>
+                        <span class="add-on" data-bind="text: fileName"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Identifier</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: profileName, attr: {placeholder: placeholderName}">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Name</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: profileDisplayName, attr: {placeholder: placeholderDisplayName}">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Description</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: profileDescription, attr: {placeholder: placeholderDescription}">
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: profileAllowOverwrite"> Overwrite existing file
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary" id="settings-cura-import-start">Confirm</button>
+    </div>
+</div>
+
+<div id="settings_plugin_cura_edit" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>Edit Cura Profile</h3>
+    </div>
+    <div class="modal-body">
+        <div class="tabbable">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#settings_plugin_cura_edit_general" data-toggle="tab">General</a></li>
+                <li><a href="#settings_plugin_cura_edit_basic" data-toggle="tab">Basic</a></li>
+                <li><a href="#settings_plugin_cura_edit_advanced" data-toggle="tab">Advanced</a></li>
+                <li><a href="#settings_plugin_cura_edit_expert" data-toggle="tab">Expert</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="settings_plugin_cura_edit_general">
+                    <form class="form-horizontal">
+                        <div class="control-group">
+                            <label class="control-label">Identifier</label>
+                            <div class="controls">
+                                <input type="text" class="input-block-level">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">Name</label>
+                            <div class="controls">
+                                <input type="text" class="input-block-level">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">Descripton</label>
+                            <div class="controls">
+                                <input type="text" class="input-block-level">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane" id="settings_plugin_cura_edit_basic">
+                    <form class="form-horizontal">
+                        <fieldset>
+                            <legend>Quality</legend>
+                            <div class="control-group">
+                                <label class="control-label">Layer height (mm)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Shell thickness (mm)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox"> Enable retraction
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Fill</legend>
+                            <div class="control-group">
+                                <label class="control-label">Bottom/top thickness (mm)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Fill density (%)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Speed and Temperature</legend>
+                            <div class="control-group">
+                                <label class="control-label">Print speed (mm/s)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Print temperature (캜)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Support</legend>
+                            <div class="control-group">
+                                <label class="control-label">Support type</label>
+                                <select>
+                                    <option value="none">None</option>
+                                    <option value="buildplate">Touching buildplate</option>
+                                    <option value="everywhere">Everywhere</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Platform adhesion type</label>
+                                <select>
+                                    <option value="none">None</option>
+                                    <option value="brim">Brim</option>
+                                    <option value="raft">Raft</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Filament</legend>
+                            <div class="control-group">
+                                <label class="control-label">Diameter (mm)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">Flow (%)</label>
+                                <div class="controls">
+                                    <input type="text" class="input-block-level">
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="tab-pane" id="settings_plugin_cura_edit_advanced"></div>
+                <div class="tab-pane" id="settings_plugin_cura_edit_expert"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Abort</button>
+        <button class="btn btn-primary" data-bind="click: function() { $root.confirmEditProfile() }">Confirm</button>
+    </div>
+</div>
+                        </div>
+                        <!-- /ko -->
+                    
+                
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button class="btn btn-primary" data-bind="click: saveData">Save</button>
+    </div>
+</div>
+        <div id="slicing_configuration_dialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 data-bind="text: title"></h3>
+    </div>
+    <div class="modal-body">
+        <div data-bind="visible: !enableSlicingDialog()">
+            <p>Slicing is currently disabled since no slicer has been configured yet. Please configure a slicer under "Settings".</p>
+        </div>
+        <div data-bind="visible: enableSlicingDialog()">
+            <p>Please configure which slicer and which slicing profile to use and name the GCode file to slice to below, or click "Cancel" if you do not wish to slice the file now.</p>
+            <form class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label">Slicer</label>
+                    <div class="controls">
+                        <select data-bind="options: configured_slicers, optionsText: 'name', optionsValue: 'key', optionsCaption: 'Select a slicer...', value: slicer, valueAllowUnset: true"></select>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Slicing Profile</label>
+                    <div class="controls">
+                        <select data-bind="options: profiles, optionsText: 'name', optionsValue: 'key', optionsCaption: 'Select a slicing profile...', value: profile, valueAllowUnset: true"></select>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Printer Profile</label>
+                    <div class="controls">
+                        <select data-bind="options: printerProfiles.profiles.items, optionsText: 'name', optionsValue: 'id', value: printerProfile, optionsCaption: 'Select a printer profile...'"></select>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">GCode Filename</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input type="text" data-bind="value: gcodeFilename">
+                            <span class="add-on">.gco</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">After slicing...</label>
+                    <div class="controls">
+                        <select data-bind="options: afterSlicingOptions, optionsText: 'text', optionsValue: 'value', value: afterSlicing"></select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>
+        <a href="#" class="btn btn-primary" data-bind="click: function() { if ($root.enableSliceButton()) { $root.slice() } }, enabled: enableSliceButton, css: {disabled: !$root.enableSliceButton()}">Slice</a>
+    </div>
+</div>
+        <!-- End of dialogs -->
+
+        <!-- Overlays -->
+        <div id="drop_overlay" data-bind="visible: loginState.isUser()">
+    <div id="drop_overlay_background"></div>
+    <div id="drop_overlay_wrapper">
+        
+            <div class="dropzone" id="drop_locally"><span class="text"><i class="icon-upload-alt"></i><br>Upload locally</span></div>
+            <div class="dropzone_background" id="drop_locally_background"></div>
+            <div class="dropzone" id="drop_sd"><span class="text"><i class="icon-upload-alt"></i><br>Upload to SD<br><small data-bind="visible: !isSdReady()">(SD not initialized)</small></span></div>
+            <div class="dropzone_background" id="drop_sd_background"></div>
+        
+    </div>
+</div>
+        <div id="offline_overlay" xmlns="http://www.w3.org/1999/html">
+    <div id="offline_overlay_background"></div>
+    <div id="offline_overlay_wrapper">
+        <div class="container">
+            <div class="hero-unit">
+                <h1 id="offline_overlay_title">Server is offline</h1>
+                <p id="offline_overlay_message"></p>
+                <p>
+                    <a class="btn btn-primary btn-large" id="offline_overlay_reconnect">Attempt to reconnect</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- End of overlays -->
+
+        <!-- Generic plugin template files -->
+        
+        <!-- End of generic plugin template files -->
+
+        <script type="text/javascript" src="/static/js/lib/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/modernizr.custom.js"></script>
+<script type="text/javascript" src="/static/js/lib/lodash.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/sprintf.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/knockout.js"></script>
+<script type="text/javascript" src="/static/js/lib/knockout.mapping-latest.js"></script>
+<script type="text/javascript" src="/static/js/lib/babel.js"></script>
+<script type="text/javascript" src="/static/js/lib/avltree.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap/bootstrap.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap/bootstrap-modalmanager.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap/bootstrap-modal.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap/bootstrap-slider.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap/bootstrap-tabdrop.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.ui.core.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.ui.widget.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.ui.mouse.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.flot.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.iframe-transport.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.fileupload.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.slimscroll.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/jquery/jquery.qrcode.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/sockjs-0.3.4.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/moment-with-locales.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/pusher.color.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/detectmobilebrowser.js"></script>
+<script type="text/javascript" src="/static/js/lib/md5.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/pnotify.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/bootstrap-slider-knockout-binding.js"></script>
+<script type="text/javascript" src="/static/js/lib/loglevel.min.js"></script>
+
+<!-- Include OctoPrint files -->
+<!-- TODO: merge/minimize in the future -->
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/appearance.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/connection.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/control.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/firstrun.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/files.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/loginstate.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/navigation.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/printerstate.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/printerprofiles.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/settings.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/slicing.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/temperature.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/terminal.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/users.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/log.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/gcode.js"></script>
+
+    <script type="text/javascript" src="/static/gcodeviewer/js/ui.js"></script>
+
+    <script type="text/javascript" src="/static/gcodeviewer/js/gCodeReader.js"></script>
+
+    <script type="text/javascript" src="/static/gcodeviewer/js/renderer.js"></script>
+
+    <script type="text/javascript" src="/static/js/app/viewmodels/timelapse.js"></script>
+
+    <script type="text/javascript" src="/static/plugins/cura/static/js/cura.js"></script>
+
+
+<script type="text/javascript" src="/static/js/app/dataupdater.js"></script>
+<script type="text/javascript" src="/static/js/app/helpers.js"></script>
+
+<script type="text/javascript" src="/static/js/app/main.js"></script>
+<!-- /Include OctoPrint files -->
+
+<!-- Include i18n language files -->
+
+<!-- /Include i18n language files -->
+
+<script type="text/javascript" src="/static/gcodeviewer/js/ui.js"></script>
+<script type="text/javascript" src="/static/gcodeviewer/js/gCodeReader.js"></script>
+<script type="text/javascript" src="/static/gcodeviewer/js/renderer.js"></script>
+    </body>
+</html>

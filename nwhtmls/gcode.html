@@ -1,0 +1,94 @@
+     <!DOCTYPE html>
+<html>
+    <head>
+        <title data-bind="text: title">OctoPrint</title>  
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script> 
+$(function(){
+  $("#header").load("header.html"); 
+  $("#footer").load("footer.html"); 
+});
+</script> 	
+<div id="header"></div>	
+    </head>
+    <body> 
+<div id="gcode" class="tab-pane active">
+                                        <div data-bind="visible: !waitForApproval()">
+    <div class="slider slider-vertical slider-disabled" id="gcode_layer_slider"><div class="slider-track"><div class="slider-selection" style="top: 100%; height: 0%;"></div><div class="slider-handle round" style="top: 100%;"></div><div class="slider-handle round hide" style="top: 100%;"></div></div><div class="tooltip right" style="left: 100%; top: -5px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">Layer #1</div></div><input id="gcode_slider_layers" type="text" style="display: none;"></div>
+    <canvas id="gcode_canvas" width="568" height="568"></canvas>
+    <div class="slider slider-horizontal slider-disabled" id="gcode_command_slider" style="width: 568.222221374512px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 100%;"></div><div class="slider-handle round" style="left: 0%;"></div><div class="slider-handle round" style="left: 100%;"></div></div><div class="tooltip top hide" style="top: -24px; left: -5px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">0 : 1</div></div><input id="gcode_slider_commands" type="text" style="width: 554px; display: none;"></div>
+
+    <div class="progress">
+        <div class="bar" style="width: 0%;" data-bind="text: ui_progress_text, style: { width: ui_progress_percentage() + '%' }"></div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span7">
+            <h1>Model info</h1>
+            <p data-bind="html: ui_modelInfo"></p>
+
+            <h1>Layer info</h1>
+            <p data-bind="html: ui_layerInfo"></p>
+        </div>
+        <div class="span5">
+            <h1>Renderer options</h1>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_syncProgress">Sync with job progress
+                </label>
+            </p>
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_centerViewport">Center viewport on model
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_zoomOnModel">Zoom in on model
+                </label>
+            </p>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showMoves">Show moves
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showRetracts">Show retracts
+                </label>
+            </p>
+
+            <p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showPrevious">Also show previous layer
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: renderer_showNext">Also show next layer
+                </label>
+            </p>
+
+            <p>
+                <button class="btn btn-block" data-bind="click: reload, enable: enableReload" disabled="">Reload</button>
+            </p>
+        </div>
+    </div>
+</div>
+<div data-bind="visible: waitForApproval" style="display: none;">
+    <h1>Warning</h1>
+
+    <p>
+        You've selected <strong data-bind="text: selectedFile.name"></strong> for printing which has a size of
+        <strong data-bind="text: formatSize(selectedFile.size())">-</strong>. Depending on your machine this
+        might be too large for rendering and cause your browser to become unresponsive or crash.
+    </p>
+
+    <p>
+        Are you sure you want to visualize this file nevertheless?
+    </p>
+
+    <button class="btn btn-warning btn-block" data-bind="click: approveLargeFile">
+        Yes, please visualize <span data-bind="text: selectedFile.name"></span> regardless of its size
+    </button>
+</div>
+                            </div>
+														</body>
+							<div id="footer"></div>	
+		</head>

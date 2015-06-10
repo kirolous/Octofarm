@@ -1,0 +1,80 @@
+    <title data-bind="text: title">Kirolous</title>
+
+        <link rel="shortcut icon" href="/static/img/tentacle-32x32.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/img/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/img/apple-touch-icon-144x144.png">
+
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-modal.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-slider.css" rel="stylesheet" media="screen">
+<link href="/static/css/bootstrap-tabdrop.css" rel="stylesheet" media="screen">
+<link href="/static/css/font-awesome.min.css" rel="stylesheet" media="screen">
+<link href="/static/css/jquery.fileupload-ui.css" rel="stylesheet" media="screen">
+<link href="/static/css/pnotify.min.css" rel="stylesheet" media="screen">
+
+
+
+    
+        <link href="/static/css/octoprint.css" rel="stylesheet" type="text/css" media="screen">
+    
+
+    
+        <link href="/static/plugins/cura/static/css/cura.css" rel="stylesheet" type="text/css" media="screen">
+    
+
+
+ <script lang="javascript">
+
+
+	
+	  var xmlhttp = new XMLHttpRequest();
+	  var url = "/static/php/printer.json";
+
+xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        var myArr = JSON.parse(xmlhttp.responseText);
+		BASEURL = myArr.Printer_URL + "/";
+		X_API_KEY = myArr.API;
+		UI_API_KEY = myArr.API;     
+    }
+}
+
+xmlhttp.open("GET", url, null);
+xmlhttp.send();
+ 
+  
+    var API_BASEURL = BASEURL + "api/";
+    var PLUGIN_BASEURL = BASEURL + "plugin/";
+    var GCODE_WORKER ="static/gcodeviewer/js/Worker.js";
+
+    var CONFIG_DEBUG =  false;
+
+    var CONFIG_GCODEFILESPERPAGE = 5000;
+    var CONFIG_TIMELAPSEFILESPERPAGE = 10;
+    var CONFIG_LOGFILESPERPAGE = 10;
+    var CONFIG_USERSPERPAGE = 10;
+    var CONFIG_WEBCAM_STREAM = BASEURL + "webcam/?action=stream";
+	
+	
+    var CONFIG_ACCESS_CONTROL = true; 
+    var CONFIG_SD_SUPPORT = true; 
+    var CONFIG_FIRST_RUN =  false;
+    var CONFIG_TEMPERATURE_GRAPH = true; 
+    var CONFIG_GCODE_SIZE_THRESHOLD = 20971520;
+    var CONFIG_GCODE_MOBILE_SIZE_THRESHOLD = 2097152;
+
+    var SOCKJS_URI = BASEURL + "sockjs";
+    var SOCKJS_DEBUG = CONFIG_DEBUG;
+
+   
+    var VERSION = "1.2.0-dev-619-gdee205f";
+    var DISPLAY_VERSION = "1.2.0-dev-619-gdee205f (devel branch)";
+    var LOCALE = "en";
+	var AVAILABLE_LOCALES ="en";
+
+    var OCTOPRINT_VIEWMODELS = [];
+    var ADDITIONAL_VIEWMODELS = [];
+	var OCTOPRINT_ADDITIONAL_BINDINGS = [];
+	
+</script>
+
