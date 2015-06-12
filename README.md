@@ -1,4 +1,4 @@
-# NoWires
+# Octofarm
 Wireless 3D printing Web Application
 
 ####Objective
