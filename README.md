@@ -38,14 +38,7 @@ In order to replicate this project the user needs:
 
 > Your web interface is now set up, use view.php to add, delete or edit a printer.
 
-####DEMO
-The php demo has been hiden from this website because it contains sensitive data, demo will be removed in one week
-Sample wordpress implementation  Kirolous.com/nw
 
->http://kirolous.com/nwhtmls/filedisplayTest.html  -Printer selection
->http://kirolous.com/nwhtmls/webcontrol.html       -Printer control
->http://kirolous.com/nwhtmls/temp.html             -Temp
->http://kirolous.com/nwhtmls/filestab.html         -Files
 
 
 ####Third Party LibraryOctoprint
